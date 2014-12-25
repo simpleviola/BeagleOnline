@@ -1,0 +1,150 @@
+system
+	module Controller
+		bool theta1, theta2, theta3, theta4;
+		bool carry1, carry2, carry3, carry4;
+
+		location Heating, Cooling, ShutDown;
+
+		label Tick, SD, CR1_heat, CR1_cool, CR2_heat, CR2_cool;
+
+		init Heating do {
+			theta1 = false;
+			theta2 = true;
+			theta3 = false;
+			theta4 = false;
+		};
+
+		//label Tick;
+		from Heating to Heating on Tick provided !((theta1 == true) && (theta2 == false) && (theta3 == true) && (theta4 == false)) do {
+			carry4 = theta4 && true;
+			theta4 = ((!theta4) && true) || (theta4 && (!true));
+			carry3 = (theta3 && false) || (theta3 && carry4) || (false && carry4);
+			theta3 = ((!theta3) && (!false) && carry4) || ((!theta3) && false && (!carry4)) || (theta3 && (!false) && (!carry4)) || (theta3 && false && carry4);
+			carry2 = (theta2 && false) || (theta2 && carry3) || (false && carry3);
+			theta2 = ((!theta2) && (!false) && carry3) || ((!theta2) && false && (!carry3)) || (theta2 && (!false) && (!carry3)) || (theta2 && false && carry3);
+			carry1 = (theta1 && false) || (theta1 && carry2) || (false && carry2);
+			theta1 = ((!theta1) && (!false) && carry2) || ((!theta1) && false && (!carry2)) || (theta1 && (!false) && (!carry2)) || (theta1 && false && carry2);
+		};
+		from Cooling to Cooling on Tick provided !((theta1 == false) && (theta2 == true) && (theta3 == true) && (theta4 == false)) do {
+			carry4 = (!theta4) && false;
+			theta4 = ((!theta4) && false) || (theta4 && (!false));
+			carry3 = ((!theta3) && (true || carry4)) || (theta3 && true && carry4);
+			theta3 = ((!theta3) && (!true) && carry4) || ((!theta3) && true && (!carry4)) || (theta3 && (!true) && (!carry4)) || (theta3 && true && carry4);
+			carry2 = ((!theta2) && (false || carry3)) || (theta2 && false && carry3);
+			theta2 = ((!theta2) && (!false) && carry3) || ((!theta2) && false && (!carry3)) || (theta2 && (!false) && (!carry3)) || (theta2 && false && carry3);
+			carry1 = ((!theta1) && (false || carry2)) || (theta1 && false && carry2);
+			theta1 = ((!theta1) && (!false) && carry2) || ((!theta1) && false && (!carry2)) || (theta1 && (!false) && (!carry2)) || (theta1 && false && carry2);
+		};
+
+		//label SD
+		from Heating to ShutDown on SD provided ((theta1 == true) && (theta2 == false) && (theta3 == true) && (theta4 == false)) && ((((false && !(Rod1.count1)) || ((false == Rod1.count1) && ((false && !(Rod1.count2)) || ((false == Rod1.count2) && ((false && !(Rod1.count3)) || ((false == Rod1.count3) && ((true && !(Rod1.count4)) || ((true == Rod1.count4) && ((false && !(Rod1.count5)) || ((false == Rod1.count5) && (true && (!Rod1.count6))))))))))))) && (((false && !(Rod2.count1)) || ((false == Rod2.count1) && ((false && !(Rod2.count2)) || ((false == Rod2.count2) && ((false && !(Rod2.count3)) || ((false == Rod2.count3) && ((true && !(Rod2.count4)) || ((true == Rod2.count4) && ((false && !(Rod2.count5)) || ((false == Rod2.count5) && (true && (!Rod2.count6))))))))))))));
+
+		//label CR1_heat,CR2_heat
+		from Cooling to Heating on CR1_heat provided ((theta1 == false) && (theta2 == true) && (theta3 == true) && (theta4 == false));
+		from Cooling to Heating on CR2_heat provided ((theta1 == false) && (theta2 == true) && (theta3 == true) && (theta4 == false));
+
+		//label CR1_cool,CR2_cool;
+		from Heating to Cooling on CR1_cool provided ((theta1 == true) && (theta2 == false) && (theta3 == true) && (theta4 == false));
+		from Heating to Cooling on CR2_cool provided ((theta1 == true) && (theta2 == false) && (theta3 == true) && (theta4 == false));
+	end
+
+	module Rod1
+		bool t1=false, t2=false, t3=false, t4=true, t5=false, t6=true;
+		bool count1, count2, count3, count4, count5, count6;
+		bool carry1, carry2, carry3, carry4, carry5, carry6;
+
+		location Resting, Cooling;
+		label Tick, SD, CR1_heat, CR1_cool;
+
+		init Resting do {
+			count1 = t1;
+			count2 = t2;
+			count3 = t3;
+			count4 = t4;
+			count5 = t5;
+			count6 = t6;
+		};
+
+		//label Tick;
+		from Resting to Resting on Tick do {
+			carry6 = count6 && true;
+			count6 = ((!count6) && true) || (count6 && (!true));
+			carry5 = (count5 && false) || (count5 && carry6) || (false && carry6);
+			count5 = ((!count5) && (!false) && carry6) || ((!count5) && false && (!carry6)) || (count5 && (!false) && (!carry6)) || (count5 && false && carry6);
+			carry4 = (count4 && false) || (count4 && carry5) || (false && carry5);
+			count4 = ((!count4) && (!false) && carry5) || ((!count4) && false && (!carry5)) || (count4 && (!false) && (!carry5)) || (count4 && false && carry5);
+			carry3 = (count3 && false) || (count3 && carry4) || (false && carry4);
+			count3 = ((!count3) && (!false) && carry4) || ((!count3) && false && (!carry4)) || (count3 && (!false) && (!carry4)) || (count3 && false && carry4);
+			carry2 = (count2 && false) || (count2 && carry3) || (false && carry3);
+			count2 = ((!count2) && (!false) && carry3) || ((!count2) && false && (!carry3)) || (count2 && (!false) && (!carry3)) || (count2 && false && carry3);
+			carry1 = (count1 && false) || (count1 && carry2) || (false && carry2);
+			count1 = ((!count1) && (!false) && carry2) || ((!count1) && false && (!carry2)) || (count1 && (!false) && (!carry2)) || (count1 && false && carry2);
+		};
+		from Cooling to Cooling on Tick;
+
+		//label SD;
+		from Resting to Resting on SD provided ((false && !count1) || ((false == count1) && ((false && !count2) || ((false == count2) && ((false && !count3) || ((false == count3) && ((true && !count4) || ((true == count4) && ((false && !count5) || ((false == count5) && (true && !count6))))))))))) && ((false && !Rod2.count1) || ((false == Rod2.count1) && ((false && !Rod2.count2) || ((false == Rod2.count2) && ((false && !Rod2.count3) || ((false == Rod2.count3) && ((true && !Rod2.count4) || ((true == Rod2.count4) && ((false && !Rod2.count5) || ((false == Rod2.count5) && (true && !Rod2.count6)))))))))));
+
+		//label CR1_heat,CR1_cool;
+		from Cooling to Resting on CR1_heat do {
+			count1 = false;
+			count2 = false;
+			count3 = false;
+			count4 = false;
+			count5 = false;
+			count6 = false;
+		};
+		from Resting to Cooling on CR1_cool provided (((count1 && !(false)) || ((count1 == false) && ((count2 && !(false)) || ((count2 == false) && ((count3 && !(false)) || ((count3 == false) && ((count4 && !(true)) || ((count4 == true) && ((count5 && !(false)) || ((count5 == false) && (count6 || (!true)))))))))))));
+	end
+
+	module Rod2
+		bool t1=false, t2=false, t3=false, t4=false, t5=false, t6=false;
+		bool count1, count2, count3, count4, count5, count6;
+		bool carry1, carry2, carry3, carry4, carry5, carry6;
+
+		location Resting, Cooling;
+		label Tick, SD, CR2_heat, CR2_cool;
+
+		init Resting do {
+			count1 = t1;
+			count2 = t2;
+			count3 = t3;
+			count4 = t4;
+			count5 = t5;
+			count6 = t6;
+		};
+
+		//label Tick;
+		from Resting to Resting on Tick do {
+			carry6 = count6 && true;
+			count6 = ((!count6) && true) || (count6 && (!true));
+			carry5 = (count5 && false) || (count5 && carry6) || (false && carry6);
+			count5 = ((!count5) && (!false) && carry6) || ((!count5) && false && (!carry6)) || (count5 && (!false) && (!carry6)) || (count5 && false && carry6);
+			carry4 = (count4 && false) || (count4 && carry5) || (false && carry5);
+			count4 = ((!count4) && (!false) && carry5) || ((!count4) && false && (!carry5)) || (count4 && (!false) && (!carry5)) || (count4 && false && carry5);
+			carry3 = (count3 && false) || (count3 && carry4) || (false && carry4);
+			count3 = ((!count3) && (!false) && carry4) || ((!count3) && false && (!carry4)) || (count3 && (!false) && (!carry4)) || (count3 && false && carry4);
+			carry2 = (count2 && false) || (count2 && carry3) || (false && carry3);
+			count2 = ((!count2) && (!false) && carry3) || ((!count2) && false && (!carry3)) || (count2 && (!false) && (!carry3)) || (count2 && false && carry3);
+			carry1 = (count1 && false) || (count1 && carry2) || (false && carry2);
+			count1 = ((!count1) && (!false) && carry2) || ((!count1) && false && (!carry2)) || (count1 && (!false) && (!carry2)) || (count1 && false && carry2);
+		};
+		from Cooling to Cooling on Tick;
+
+		//label SD;
+		from Resting to Resting on SD provided (((false && !(Rod1.count1)) || ((false == Rod1.count1) && ((false && !(Rod1.count2)) || ((false == Rod1.count2) && ((false && !(Rod1.count3)) || ((false == Rod1.count3) && ((true && !(Rod1.count4)) || ((true == Rod1.count4) && ((false && !(Rod1.count5)) || ((false == Rod1.count5) && (true && (!Rod1.count6))))))))))))) && (((false && !(count1)) || ((false == count1) && ((false && !(count2)) || ((false == count2) && ((false && !(count3)) || ((false == count3) && ((true && !(count4)) || ((true == count4) && ((false && !(count5)) || ((false == count5) && (true && (!count6)))))))))))));
+
+		//label CR2_heat,CR2_cool;
+		from Cooling to Resting on CR2_heat do {
+			count1 = false;
+			count2 = false;
+			count3 = false;
+			count4 = false;
+			count5 = false;
+			count6 = false;
+		};
+		from Resting to Cooling on CR2_cool provided (((count1 && !(false)) || ((count1 == false) && ((count2 && !(false)) || ((count2 == false) && ((count3 && !(false)) || ((count3 == false) && ((count4 && !(true)) || ((count4 == true) && ((count5 && !(false)) || ((count5 == false) && (count6 || (!true)))))))))))));
+	end
+
+	INVARSPEC !(Controller.location == ShutDown)
+end

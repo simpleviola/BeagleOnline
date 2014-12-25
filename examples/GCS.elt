@@ -1,0 +1,348 @@
+system
+	module GateControl
+		bool TargetPos1, TargetPos2, TargetPos3, TargetPos4, TargetPos5;
+		bool TargetSpeed1, TargetSpeed2, TargetSpeed3;
+		bool CurPos1, CurPos2, CurPos3, CurPos4, CurPos5;
+		bool ActSpeed1, ActSpeed2, ActSpeed3;
+		bool LmtFlag1, LmtFlag2, LmtFlag3;
+		bool ActDir1, Ok1, ReachTargetPos1;
+		bool Count1, Count2, Count3;
+		bool carry1, carry2, carry3;
+		bool TargetPosEquCurPos, TargetPosGTCurPos, ActSpeedIsZero;
+
+		location p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19;
+		location pp1,pp2,pp3;
+
+		label start,finish,request,response,notify,ginit,stop,alarm,constraitViolated,tau;
+		label _alltick;
+		label io;
+
+		init pp3 do {
+			LmtFlag1 = false;
+			LmtFlag2 = false;
+			LmtFlag3 = false;
+			ActDir1 = false;
+			Ok1 = true;
+			ReachTargetPos1 = false;
+			ActSpeed1 = false;
+			ActSpeed2 = false;
+			ActSpeed3 = false;
+		};
+
+		//label start,finish,request,response,notify,init,stop,alarm,constraitViolated,tau;
+		from p0 to p1 on start do {
+			TargetPos1 = true;
+			TargetPos2 = true;
+			TargetPos3 = false;
+			TargetPos4 = false;
+			TargetPos5 = false;
+			TargetSpeed1 = true;
+			TargetSpeed2 = false;
+			TargetSpeed3 = true;
+			//Count = 0;
+			Count1 = false;
+			Count2 = false;
+			Count3 = false;
+		};
+		from p15 to p0 on finish;
+		from p4 to p5 on request;
+		from p5 to p6 on response;
+		from p3 to p4 on notify;
+		from p14 to p15 on notify;
+		from p16 to p4 on notify;
+		from pp2 to pp1 on notify;
+		from pp1 to p0 on ginit;
+		from p1 to p0 on stop;
+		from p8 to p17 on stop do{
+            ActSpeed1 = false;
+			ActSpeed2 = false;
+			ActSpeed3 = false;
+		};
+		from p10 to p17 on alarm provided !((LmtFlag1 == false) && (LmtFlag2 == false) && (LmtFlag3 == false)) do {
+            ActSpeed1 = false;
+			ActSpeed2 = false;
+			ActSpeed3 = false;
+		};
+		from p6 to p0 on constraitViolated provided Ok1 == false;
+		from p1 to p2 on tau provided ((Count1 && !(false)) || ((Count1 == false) && ((Count2 && !(true)) || ((Count2 == true) && (Count3 || (!false)))))) do {
+			//Count = 0;
+			Count1 = false;
+			Count2 = false;
+			Count3 = false;
+		};
+		from p6 to p7 on tau provided Ok1 == true;
+		from p10 to p16 on tau provided !ReachTargetPos1 && ((LmtFlag1 == false) && (LmtFlag2 == false) && (LmtFlag3 == false));
+		from p10 to p11 on tau provided ReachTargetPos1 && ((LmtFlag1 == false) && (LmtFlag2 == false) && (LmtFlag3 == false)) do {
+            ActSpeed1 = false;
+			ActSpeed2 = false;
+			ActSpeed3 = false;
+		};
+
+		//label _alltick;
+		from p0 to p0 on _alltick;
+		from p1 to p1 on _alltick provided ((false && !(Count1)) || ((false == Count1) && ((true && !(Count2)) || ((true == Count2) && (false && (!Count3)))))) do {
+			//Count = Count + 1;
+			carry3 = Count3 && true;
+			Count3 = ((!Count3) && true) || (Count3 && (!true));
+			carry2 = (Count2 && false) || (Count2 && carry3) || (false && carry3);
+			Count2 = ((!Count2) && (!false) && carry3) || ((!Count2) && false && (!carry3)) || (Count2 && (!false) && (!carry3)) || (Count2 && false && carry3);
+			carry1 = (Count1 && false) || (Count1 && carry2) || (false && carry2);
+			Count1 = ((!Count1) && (!false) && carry2) || ((!Count1) && false && (!carry2)) || (Count1 && (!false) && (!carry2)) || (Count1 && false && carry2);
+		};
+		from p8 to p9 on _alltick;
+		from p12 to p13 on _alltick;
+		from p15 to p15 on _alltick;
+		from p18 to p19 on _alltick;
+
+		//label io;
+		from pp3 to pp2 on io do {
+			// down action
+			CurPos1 = Gate.CurPos1;//i1
+			CurPos2 = Gate.CurPos2;//i2
+			CurPos3 = Gate.CurPos3;//i3
+			CurPos4 = Gate.CurPos4;//i4
+			CurPos5 = Gate.CurPos5;//i5
+			LmtFlag1 = Gate.LmtFlag1;//k1
+			LmtFlag2 = Gate.LmtFlag2;//k2
+			LmtFlag3 = Gate.LmtFlag3;//k3
+		};
+		from p2 to p3 on io do {
+			// down action
+			CurPos1 = Gate.CurPos1;//i1
+			CurPos2 = Gate.CurPos2;//i2
+			CurPos3 = Gate.CurPos3;//i3
+			CurPos4 = Gate.CurPos4;//i4
+			CurPos5 = Gate.CurPos5;//i5
+			LmtFlag1 = Gate.LmtFlag1;//k1
+			LmtFlag2 = Gate.LmtFlag2;//k2
+			LmtFlag3 = Gate.LmtFlag3;//k3
+			//-------
+			//if (TargetPos > CurPos)
+			//	ActDir = 1;
+			//else
+			//	ActDir = -1;
+			ActDir1 = (((TargetPos1 && !(CurPos1)) || ((TargetPos1 == CurPos1) && ((TargetPos2 && !(CurPos2)) || ((TargetPos2 == CurPos2) && ((TargetPos3 && !(CurPos3)) || ((TargetPos3 == CurPos3) && ((TargetPos4 && !(CurPos4)) || ((TargetPos4 == CurPos4) && (TargetPos5 && (!CurPos5)))))))))));
+			//if(TargetPos == CurPos)
+			//	ActSpeed = 0;
+			TargetPosEquCurPos = ((TargetPos1 == CurPos1) && (TargetPos2 == CurPos2) && (TargetPos3 == CurPos3) && (TargetPos4 == CurPos4) && (TargetPos5 == CurPos5));
+			//ActSpeed = TargetPosEquCurPos ? 0 : TargetSpeed;
+			ActSpeed1 = (!TargetPosEquCurPos) && TargetSpeed1;
+			ActSpeed2 = (!TargetPosEquCurPos) && TargetSpeed2;
+			ActSpeed3 = (!TargetPosEquCurPos) && TargetSpeed3;
+			ReachTargetPos1 = false;
+		};
+		from p7 to p8 on io do {
+			// down action
+			CurPos1 = Gate.CurPos1;//i1
+			CurPos2 = Gate.CurPos2;//i2
+			CurPos3 = Gate.CurPos3;//i3
+			CurPos4 = Gate.CurPos4;//i4
+			CurPos5 = Gate.CurPos5;//i5
+			LmtFlag1 = Gate.LmtFlag1;//k1
+			LmtFlag2 = Gate.LmtFlag2;//k2
+			LmtFlag3 = Gate.LmtFlag3;//k3
+		};
+		from p9 to p10 on io do {
+			// down action
+			CurPos1 = Gate.CurPos1;//i1
+			CurPos2 = Gate.CurPos2;//i2
+			CurPos3 = Gate.CurPos3;//i3
+			CurPos4 = Gate.CurPos4;//i4
+			CurPos5 = Gate.CurPos5;//i5
+			LmtFlag1 = Gate.LmtFlag1;//k1
+			LmtFlag2 = Gate.LmtFlag2;//k2
+			LmtFlag3 = Gate.LmtFlag3;//k3
+			//------
+			//if (ActDir == true &&&& CurPos >= TargetPos)
+			//	ReachTargetPos = 1;
+			//if (ActDir == false &&&& TargetPos > CurPos)
+			//	ReachTargetPos = 1;
+			//if (ActSpeed == 0)
+			//	ReachTargetPos = 1;
+			TargetPosGTCurPos = (((TargetPos1 && !(CurPos1)) || ((TargetPos1 == CurPos1) && ((TargetPos2 && !(CurPos2)) || ((TargetPos2 == CurPos2) && ((TargetPos3 && !(CurPos3)) || ((TargetPos3 == CurPos3) && ((TargetPos4 && !(CurPos4)) || ((TargetPos4 == CurPos4) && (TargetPos5 && (!CurPos5)))))))))));
+			ActSpeedIsZero = ((ActSpeed1 == false) && (ActSpeed2 == false) && (ActSpeed3 == false));
+			ReachTargetPos1 = (ActDir1 && (!TargetPosGTCurPos)) || ((!ActDir1) && TargetPosGTCurPos) || ActSpeedIsZero;
+		};
+		from p11 to p12 on io do {
+			// down action
+			CurPos1 = Gate.CurPos1;//i1
+			CurPos2 = Gate.CurPos2;//i2
+			CurPos3 = Gate.CurPos3;//i3
+			CurPos4 = Gate.CurPos4;//i4
+			CurPos5 = Gate.CurPos5;//i5
+			LmtFlag1 = Gate.LmtFlag1;//k1
+			LmtFlag2 = Gate.LmtFlag2;//k2
+			LmtFlag3 = Gate.LmtFlag3;//k3
+		};
+		from p13 to p14 on io do {
+			// down action
+			CurPos1 = Gate.CurPos1;//i1
+			CurPos2 = Gate.CurPos2;//i2
+			CurPos3 = Gate.CurPos3;//i3
+			CurPos4 = Gate.CurPos4;//i4
+			CurPos5 = Gate.CurPos5;//i5
+			LmtFlag1 = Gate.LmtFlag1;//k1
+			LmtFlag2 = Gate.LmtFlag2;//k2
+			LmtFlag3 = Gate.LmtFlag3;//k3
+		};
+		from p17 to p18 on io do {
+			// down action
+			CurPos1 = Gate.CurPos1;//i1
+			CurPos2 = Gate.CurPos2;//i2
+			CurPos3 = Gate.CurPos3;//i3
+			CurPos4 = Gate.CurPos4;//i4
+			CurPos5 = Gate.CurPos5;//i5
+			LmtFlag1 = Gate.LmtFlag1;//k1
+			LmtFlag2 = Gate.LmtFlag2;//k2
+			LmtFlag3 = Gate.LmtFlag3;//k3
+		};
+		from p19 to p0 on io do {
+			// down action
+			CurPos1 = Gate.CurPos1;//i1
+			CurPos2 = Gate.CurPos2;//i2
+			CurPos3 = Gate.CurPos3;//i3
+			CurPos4 = Gate.CurPos4;//i4
+			CurPos5 = Gate.CurPos5;//i5
+			LmtFlag1 = Gate.LmtFlag1;//k1
+			LmtFlag2 = Gate.LmtFlag2;//k2
+			LmtFlag3 = Gate.LmtFlag3;//k3
+		};
+	end
+
+	module Gate
+		bool TargetSpeed1, TargetSpeed2, TargetSpeed3;
+		bool CurSpeed1, CurSpeed2, CurSpeed3;
+		bool CurPos1, CurPos2, CurPos3, CurPos4, CurPos5;
+		bool NextSpeed11, NextSpeed12, NextSpeed13;
+		bool NextSpeed21, NextSpeed22, NextSpeed23;
+		bool NextSpeed31, NextSpeed32, NextSpeed33;
+		bool carry11, carry12, carry13, carry14, carry15;
+		bool carry21, carry22, carry23, carry24, carry25;
+		bool carry31, carry32, carry33, carry34, carry35;
+		bool carry41, carry42, carry43, carry44, carry45;
+		bool carry51, carry52, carry53, carry54, carry55;
+		bool PCurPos1, PCurPos2, PCurPos3, PCurPos4, PCurPos5;
+		bool NCurPos1, NCurPos2, NCurPos3, NCurPos4, NCurPos5;
+		bool LmtFlag1, LmtFlag2, LmtFlag3;
+		bool Dir1, TargetDir1;
+		bool hardDown, softDown, hardUp, softUp;
+		bool TargetSpeedIsZero, TargetSpeedGTCurSpeed, CurSpeedIsZero;
+
+		location INITC;
+
+		label _alltick;
+		label io;
+
+		init INITC do {
+			CurPos1 = false;
+			CurPos2 = true;
+			CurPos3 = false;
+			CurPos4 = false;
+			CurPos5 = false;
+			CurSpeed1 = false;
+			CurSpeed2 = false;
+			CurSpeed3 = false;
+			LmtFlag1 = false;
+			LmtFlag2 = false;
+			LmtFlag3 = false;
+			Dir1 = true;
+		};
+
+		//label _alltick;
+		from INITC to INITC on _alltick do {
+			// NextSpeed1 = CurSpeed - ACC_STOP; // carry1
+			carry13 = (!CurSpeed3) && true;
+			NextSpeed13 = ((!CurSpeed3) && true) || (CurSpeed3 && (!true));
+			carry12 = ((!CurSpeed2) && (true || carry13)) || (CurSpeed2 && true && carry13);
+			NextSpeed12 = ((!CurSpeed2) && (!true) && carry13) || ((!CurSpeed2) && true && (!carry13)) || (CurSpeed2 && (!true) && (!carry13)) || (CurSpeed2 && true && carry13);
+			carry11 = ((!CurSpeed1) && (false || carry12)) || (CurSpeed1 && false && carry12);
+			NextSpeed11 = ((!CurSpeed1) && (!false) && carry12) || ((!CurSpeed1) && false && (!carry12)) || (CurSpeed1 && (!false) && (!carry12)) || (CurSpeed1 && false && carry12);
+			// NextSpeed2 = CurSpeed - ACC_WORK; // carry2
+			carry23 = (!CurSpeed3) && true;
+			NextSpeed23 = ((!CurSpeed3) && true) || (CurSpeed3 && (!true));
+			carry22 = ((!CurSpeed2) && (false || carry23)) || (CurSpeed2 && false && carry23);
+			NextSpeed22 = ((!CurSpeed2) && (!false) && carry23) || ((!CurSpeed2) && false && (!carry23)) || (CurSpeed2 && (!false) && (!carry23)) || (CurSpeed2 && false && carry23);
+			carry21 = ((!CurSpeed1) && (false || carry22)) || (CurSpeed1 && false && carry22);
+			NextSpeed21 = ((!CurSpeed1) && (!false) && carry22) || ((!CurSpeed1) && false && (!carry22)) || (CurSpeed1 && (!false) && (!carry22)) || (CurSpeed1 && false && carry22);
+			//NextSpeed3 = CurSpeed + ACC_WORK; // carry3
+			carry33 = CurSpeed3 && true;
+			NextSpeed33 = ((!CurSpeed3) && true) || (CurSpeed3 && (!true));
+			carry32 = (CurSpeed2 && false) || (CurSpeed2 && carry33) || (false && carry33);
+			NextSpeed32 = ((!CurSpeed2) && (!false) && carry33) || ((!CurSpeed2) && false && (!carry33)) || (CurSpeed2 && (!false) && (!carry33)) || (CurSpeed2 && false && carry33);
+			carry31 = (CurSpeed1 && false) || (CurSpeed1 && carry32) || (false && carry32);
+			NextSpeed31 = ((!CurSpeed1) && (!false) && carry32) || ((!CurSpeed1) && false && (!carry32)) || (CurSpeed1 && (!false) && (!carry32)) || (CurSpeed1 && false && carry32);
+			//CurSpeed = (!(TargetSpeed == 0) && (((TargetDir == Dir) && (TargetSpeed > CurSpeed) && NextSpeed3) || ((((!(TargetDir == Dir)) || !(TargetSpeed > CurSpeed)) && ((!carry21 && NextSpeed2) || (carry21 && 0)))))) ||
+			//			((TargetSpeed == 0) && (((!carry11) && NextSpeed1) || (carry11 && 0)));
+			CurSpeedIsZero = (CurSpeed1 == false) && (CurSpeed2 == false) && (CurSpeed3 == false);
+			TargetSpeedIsZero = ((TargetSpeed1 == false) && (TargetSpeed2 == false) && (TargetSpeed3 == false));
+			TargetSpeedGTCurSpeed = ((TargetSpeed1 && !(CurSpeed1)) || ((TargetSpeed1 == CurSpeed1) && ((TargetSpeed2 && !(CurSpeed2)) || ((TargetSpeed2 == CurSpeed2) && (TargetSpeed3 && (!CurSpeed3))))));
+			Dir1 = (CurSpeedIsZero && TargetDir1) || ((!CurSpeedIsZero) && Dir1);
+			CurSpeed1 = ((!TargetSpeedIsZero) && (((TargetDir1 == Dir1) && TargetSpeedGTCurSpeed && NextSpeed31) || ((((!(TargetDir1 == Dir1)) || !(TargetSpeedGTCurSpeed)) && ((!carry21 && NextSpeed21) || (carry21 && false)))))) || ((TargetSpeedIsZero) && (((!carry11) && NextSpeed11) || (carry11 && false)));
+			CurSpeed2 = ((!TargetSpeedIsZero) && (((TargetDir1 == Dir1) && TargetSpeedGTCurSpeed && NextSpeed32) || ((((!(TargetDir1 == Dir1)) || !(TargetSpeedGTCurSpeed)) && ((!carry21 && NextSpeed22) || (carry21 && false)))))) || ((TargetSpeedIsZero) && (((!carry11) && NextSpeed12) || (carry11 && false)));
+			CurSpeed3 = ((!TargetSpeedIsZero) && (((TargetDir1 == Dir1) && TargetSpeedGTCurSpeed && NextSpeed33) || ((((!(TargetDir1 == Dir1)) || !(TargetSpeedGTCurSpeed)) && ((!carry21 && NextSpeed23) || (carry21 && false)))))) || ((TargetSpeedIsZero) && (((!carry11) && NextSpeed13) || (carry11 && false)));
+			//PCurPos = CurPos + CurSpeed;
+			carry45 = CurPos5 && CurSpeed3;
+			PCurPos5 = ((!CurPos5) && CurSpeed3) || (CurPos5 && (!CurSpeed3));
+			carry44 = (CurPos4 && CurSpeed2) || (CurPos4 && carry45) || (CurSpeed2 && carry45);
+			PCurPos4 = ((!CurPos4) && (!CurSpeed2) && carry45) || ((!CurPos4) && CurSpeed2 && (!carry45)) || (CurPos4 && (!CurSpeed2) && (!carry45)) || (CurPos4 && CurSpeed2 && carry45);
+			carry43 = (CurPos3 && CurSpeed1) || (CurPos3 && carry44) || (CurSpeed1 && carry44);
+			PCurPos3 = ((!CurPos3) && (!CurSpeed1) && carry44) || ((!CurPos3) && CurSpeed1 && (!carry44)) || (CurPos3 && (!CurSpeed1) && (!carry44)) || (CurPos3 && CurSpeed1 && carry44);
+			carry42 = (CurPos2 && false) || (CurPos2 && carry43) || (false && carry43);
+			PCurPos2 = ((!CurPos2) && (!false) && carry43) || ((!CurPos2) && false && (!carry43)) || (CurPos2 && (!false) && (!carry43)) || (CurPos2 && false && carry43);
+			carry41 = (CurPos1 && false) || (CurPos1 && carry42) || (false && carry42);
+			PCurPos1 = ((!CurPos1) && (!false) && carry42) || ((!CurPos1) && false && (!carry42)) || (CurPos1 && (!false) && (!carry42)) || (CurPos1 && false && carry42);
+			//NCurPos = CurPos - CurSpeed;
+			carry55 = (!CurPos5) && CurSpeed3;
+			NCurPos5 = ((!CurPos5) && CurSpeed3) || (CurPos5 && (!CurSpeed3));
+			carry54 = ((!CurPos4) && (CurSpeed2 || carry55)) || (CurPos4 && CurSpeed2 && carry55);
+			NCurPos4 = ((!CurPos4) && (!CurSpeed2) && carry55) || ((!CurPos4) && CurSpeed2 && (!carry55)) || (CurPos4 && (!CurSpeed2) && (!carry55)) || (CurPos4 && CurSpeed2 && carry55);
+			carry53 = ((!CurPos3) && (CurSpeed1 || carry54)) || (CurPos3 && CurSpeed1 && carry54);
+			NCurPos3 = ((!CurPos3) && (!CurSpeed1) && carry54) || ((!CurPos3) && CurSpeed1 && (!carry54)) || (CurPos3 && (!CurSpeed1) && (!carry54)) || (CurPos3 && CurSpeed1 && carry54);
+			carry52 = ((!CurPos2) && (false || carry53)) || (CurPos2 && false && carry53);
+			NCurPos2 = ((!CurPos2) && (!false) && carry53) || ((!CurPos2) && false && (!carry53)) || (CurPos2 && (!false) && (!carry53)) || (CurPos2 && false && carry53);
+			carry51 = ((!CurPos1) && (false || carry52)) || (CurPos1 && false && carry52);
+			NCurPos1 = ((!CurPos1) && (!false) && carry52) || ((!CurPos1) && false && (!carry52)) || (CurPos1 && (!false) && (!carry52)) || (CurPos1 && false && carry52);
+			//CurPos = TargetDir1 ? PCurPos : NCurPos;
+			CurPos1 = (Dir1 && PCurPos1) || ((!Dir1) && NCurPos1);
+			CurPos2 = (Dir1 && PCurPos2) || ((!Dir1) && NCurPos2);
+			CurPos3 = (Dir1 && PCurPos3) || ((!Dir1) && NCurPos3);
+			CurPos4 = (Dir1 && PCurPos4) || ((!Dir1) && NCurPos4);
+			CurPos5 = (Dir1 && PCurPos5) || ((!Dir1) && NCurPos5);
+			// update LmtFlag
+			//if (HARD_DOWN_LMT >= CurPos)
+			//	LmtFlag = 1;
+			//else if (SOFT_DOWN_LMT >= CurPos)
+			//	LmtFlag = 2;
+			//else if (CurPos > HARD_UP_LMT)
+			//	LmtFlag = 4;
+			//else if (CurPos > SOFT_UP_LMT)
+			//	LmtFlag = 3;
+			//else
+			//	LmtFlag = 0;
+			hardDown = ((false && !(CurPos1)) || ((false == CurPos1) && ((false && !(CurPos2)) || ((false == CurPos2) && ((false && !(CurPos3)) || ((false == CurPos3) && ((true && !(CurPos4)) || ((true == CurPos4) && (true || (!CurPos5))))))))));
+			softDown = ((false && !(CurPos1)) || ((false == CurPos1) && ((false && !(CurPos2)) || ((false == CurPos2) && ((true && !(CurPos3)) || ((true == CurPos3) && ((true && !(CurPos4)) || ((true == CurPos4) && (false || (!CurPos5))))))))));
+			hardUp = ((CurPos1 && !(true)) || ((CurPos1 == true) && ((CurPos2 && !(true)) || ((CurPos2 == true) && ((CurPos3 && !(true)) || ((CurPos3 == true) && ((CurPos4 && !(false)) || ((CurPos4 == false) && (CurPos5 && (!false))))))))));
+			softUp = ((CurPos1 && !(true)) || ((CurPos1 == true) && ((CurPos2 && !(true)) || ((CurPos2 == true) && ((CurPos3 && !(false)) || ((CurPos3 == false) && ((CurPos4 && !(false)) || ((CurPos4 == false) && (CurPos5 && (!true))))))))));
+			LmtFlag1 = (hardDown && false) || (!hardDown && softDown && false) || (hardUp && true) || (!hardUp && softUp && false) || (!softDown && !softUp && false);
+			LmtFlag2 = (hardDown && false) || (!hardDown && softDown && true) || (hardUp && false) || (!hardUp && softUp && true) || (!softDown && !softUp && false);
+			LmtFlag3 = (hardDown && true) || (!hardDown && softDown && false) || (hardUp && false) || (!hardUp && softUp && true) || (!softDown && !softUp && false);
+		};
+
+		//label io;
+		from INITC to INITC on io do {
+			TargetDir1 = GateControl.ActDir1;
+			TargetSpeed1 = GateControl.ActSpeed1;
+			TargetSpeed2 = GateControl.ActSpeed2;
+			TargetSpeed3 = GateControl.ActSpeed3;
+		};
+	end
+
+	INVARSPEC ((true && !(Gate.CurSpeed1)) || ((true == Gate.CurSpeed1) && ((false && !(Gate.CurSpeed2)) || ((false == Gate.CurSpeed2) && (true && (!Gate.CurSpeed3))))))
+
+	INVARSPEC ((true && !(Gate.CurPos1)) || ((true == Gate.CurPos1) && ((true && !(Gate.CurPos2)) || ((true == Gate.CurPos2) && ((false && !(Gate.CurPos3)) || ((false == Gate.CurPos3) && ((false && !(Gate.CurPos4)) || ((false == Gate.CurPos4) && (true && (!Gate.CurPos5))))))))))
+
+	//INVARSPEC ((Gate.CurPos1 && !(false)) || ((Gate.CurPos1 == false) && ((Gate.CurPos2 && !(false)) || ((Gate.CurPos2 == false) && ((Gate.CurPos3 && !(true)) || ((Gate.CurPos3 == true) && ((Gate.CurPos4 && !(false)) || ((Gate.CurPos4 == false) && (Gate.CurPos5 && (!true))))))))))
+
+	INVARSPEC (!(((Gate.LmtFlag1 == false) && (Gate.LmtFlag2 == false) && (Gate.LmtFlag3 == true)) || ((Gate.LmtFlag1 == true) && (Gate.LmtFlag2 == false) && (Gate.LmtFlag3 == false)))) || ((Gate.CurSpeed1 == false) && (Gate.CurSpeed2 == false) && (Gate.CurSpeed3 == false))
+
+end

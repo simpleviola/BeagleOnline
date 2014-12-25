@@ -1,0 +1,236 @@
+system
+
+	module Caller1
+		location Idle, Ringing, Calling, Waiting, Talking;
+		label c1_ac,c1_ringa,c1_answera,c1_noanswera;
+		label c1_hangupa,c1_busytonea,c1_connect;
+		label c11_onhook,c12_onhook,c13_onhook;
+		init  Idle;
+
+		//label c1_ac,c1_ringa,c1_answera,c1_noanswera;
+		//label c1_hangupa,c1_busytonea,c1_connect;
+		from Idle to Waiting on c1_ac;
+		from Waiting to Ringing on c1_ringa;
+		from Ringing to Calling on c1_answera;
+		from Ringing to Idle on c1_noanswera;
+		from Calling to Talking on c1_hangupa;
+		from Calling to Talking on c1_busytonea;
+		from Calling to Talking on c1_connect;
+
+		//label c11_onhook,c12_onhook,c13_onhook;
+		from Talking to Idle on c11_onhook;
+		from Talking to Idle on c12_onhook;
+		from Talking to Idle on c13_onhook;
+	end
+
+	module Caller2
+		location Idle, Ringing, Calling, Waiting, Talking;
+		label c2_ac,c2_ringa,c2_answera,c2_noanswera;
+		label c2_hangupa,c2_busytonea,c2_connect;
+		label c21_onhook,c22_onhook,c23_onhook;
+		init  Idle;
+
+		//label c2_ac,c2_ringa,c2_answera,c2_noanswera;
+		//label c2_hangupa,c2_busytonea,c2_connect;
+		from Idle to Waiting on c2_ac;
+		from Waiting to Ringing on c2_ringa;
+		from Ringing to Calling on c2_answera;
+		from Ringing to Idle on c2_noanswera;
+		from Calling to Talking on c2_hangupa;
+		from Calling to Talking on c2_busytonea;
+		from Calling to Talking on c2_connect;
+
+		//label c21_onhook,c22_onhook,c23_onhook;
+		from Talking to Idle on c21_onhook;
+		from Talking to Idle on c22_onhook;
+		from Talking to Idle on c23_onhook;
+	end
+
+	module Caller3
+		location Idle, Ringing, Calling, Waiting, Talking;
+		label c3_ac,c3_ringa,c3_answera,c3_noanswera;
+		label c3_hangupa,c3_busytonea,c3_connect;
+		label c31_onhook,c32_onhook,c33_onhook;
+		init  Idle;
+
+		//label c3_ac,c3_ringa,c3_answera,c3_noanswera;
+		//label c3_hangupa,c3_busytonea,c3_connect;
+		from Idle to Waiting on c3_ac;
+		from Waiting to Ringing on c3_ringa;
+		from Ringing to Calling on c3_answera;
+		from Ringing to Idle on c3_noanswera;
+		from Calling to Talking on c3_hangupa;
+		from Calling to Talking on c3_busytonea;
+		from Calling to Talking on c3_connect;
+
+		//label c31_onhook,c32_onhook,c33_onhook;
+		from Talking to Idle on c31_onhook;
+		from Talking to Idle on c32_onhook;
+		from Talking to Idle on c33_onhook;
+	end
+
+	module Callee1
+		location Onhook, Ring, Offkook, Checkb1, Checkb2, Ringb;
+		label c11_onhook, c21_onhook, c31_onhook;
+		label c1_available,c1_checkb,c1_ringb,c1_stopringb,c1_answerb,c1_busyb,c1_offhookb;
+		init  Onhook;
+
+		//label c11_onhook,c21_onhook,c31_onhook;
+		from Offkook to Onhook on c11_onhook;
+		from Offkook to Onhook on c21_onhook;
+		from Offkook to Onhook on c31_onhook;
+
+		//label c1_available,c1_checkb,c1_ringb,c1_stopringb,c1_answerb,c1_busyb,c1_offhookb;
+		from Checkb1 to Onhook on c1_available;
+
+		from Onhook to Checkb1 on c1_checkb;
+		from Offkook to Checkb2 on c1_checkb;
+
+		from Onhook to Ring on c1_ringb;
+		from Offkook to Ringb on c1_ringb;
+
+		from Ring to Offkook on c1_stopringb;
+		from Ring to Offkook on c1_answerb;
+		from Checkb2 to Offkook on c1_busyb;
+		from Ringb to Offkook on c1_busyb;
+		from Onhook to Offkook on c1_offhookb;
+	end
+
+	module Callee2
+		location Onhook, Ring, Offkook, Checkb1, Checkb2, Ringb;
+		label c12_onhook,c22_onhook,c32_onhook;
+		label c2_available,c2_checkb,c2_ringb,c2_stopringb,c2_answerb,c2_busyb,c2_offhookb;
+		init  Onhook;
+
+		//label c21_onhook,c22_onhook,c23_onhook;
+		from Offkook to Onhook on c12_onhook;
+		from Offkook to Onhook on c22_onhook;
+		from Offkook to Onhook on c32_onhook;
+
+		//label c2_available,c2_checkb,c2_ringb,c2_stopringb,c2_answerb,c2_busyb,c2_offhookb;
+		from Checkb1 to Onhook on c2_available;
+
+		from Onhook to Checkb1 on c2_checkb;
+		from Offkook to Checkb2 on c2_checkb;
+
+		from Onhook to Ring on c2_ringb;
+		from Offkook to Ringb on c2_ringb;
+
+		from Ring to Offkook on c2_stopringb;
+		from Ring to Offkook on c2_answerb;
+		from Checkb2 to Offkook on c2_busyb;
+		from Ringb to Offkook on c2_busyb;
+		from Onhook to Offkook on c2_offhookb;
+	end
+
+	module Callee3
+		location Onhook, Ring, Offkook, Checkb1, Checkb2, Ringb;
+		label c13_onhook,c23_onhook,c33_onhook;
+		label c3_available,c3_checkb,c3_ringb,c3_stopringb,c3_answerb,c3_busyb,c3_offhookb;
+		init  Onhook;
+
+		//label c31_onhook,c32_onhook,c33_onhook;
+		from Offkook to Onhook on c13_onhook;
+		from Offkook to Onhook on c23_onhook;
+		from Offkook to Onhook on c33_onhook;
+
+		//label c3_available,c3_checkb,c3_ringb,c3_stopringb,c3_answerb,c3_busyb,c3_offhookb;
+		from Checkb1 to Onhook on c3_available;
+
+		from Onhook to Checkb1 on c3_checkb;
+		from Offkook to Checkb2 on c3_checkb;
+
+		from Offkook to Ringb on c3_ringb;
+		from Ring to Offkook on c3_stopringb;
+		from Ring to Offkook on c3_answerb;
+		from Checkb2 to Offkook on c3_busyb;
+		from Ringb to Offkook on c3_busyb;
+		from Onhook to Offkook on c3_offhookb;
+	end
+
+	module Agent
+		location Idle, Ac, CheckB, Available, Camp;
+		location RingA, Answera, Answerb;
+		location RingB, Busyb, Hangupa;
+		label c1_ac,c1_ringa,c1_answera,c1_noanswera;
+		label c1_hangupa,c1_busytonea,c1_connect;
+		label c2_ac,c2_ringa,c2_answera,c2_noanswera;
+		label c2_hangupa,c2_busytonea,c2_connect;
+		label c3_ac,c3_ringa,c3_answera,c3_noanswera;
+		label c3_hangupa,c3_busytonea,c3_connect;
+		label c1_available,c1_checkb,c1_ringb,c1_stopringb,c1_answerb,c1_busyb;
+		label c2_available,c2_checkb,c2_ringb,c2_stopringb,c2_answerb,c2_busyb;
+		label c3_available,c3_checkb,c3_ringb,c3_stopringb,c3_answerb,c3_busyb;
+		init  Idle;
+
+		//label c1_ac,c1_ringa,c1_answera,c1_noanswera;
+		//label c1_hangupa,c1_busytonea,c1_connect;
+		from Idle to Ac on c1_ac;
+		from Available to RingA on c1_ringa;
+		from RingA to Answera on c1_answera;
+		from RingA to Idle on c1_noanswera;
+		from RingB to Hangupa on c1_hangupa;
+		from Busyb to Camp on c1_busytonea;
+		from Answerb to Idle on c1_connect;
+
+		//label c2_ac,c2_ringa,c2_answera,c2_noanswera;
+		//label c2_hangupa,c2_busytonea,c2_connect;
+		from Idle to Ac on c2_ac;
+		from Available to RingA on c2_ringa;
+		from RingA to Answera on c2_answera;
+		from RingA to Idle on c2_noanswera;
+		from RingB to Hangupa on c2_hangupa;
+		from Busyb to Camp on c2_busytonea;
+		from Answerb to Idle on c2_connect;
+
+		//label c3_ac,c3_ringa,c3_answera,c3_noanswera;
+		//label c3_hangupa,c3_busytonea,c3_connect;
+		from Idle to Ac on c3_ac;
+		from Available to RingA on c3_ringa;
+		from RingA to Answera on c3_answera;
+		from RingA to Idle on c3_noanswera;
+		from RingB to Hangupa on c3_hangupa;
+		from Busyb to Camp on c3_busytonea;
+		from Answerb to Idle on c3_connect;
+
+		//label c1_available,c1_checkb,c1_ringb,c1_stopringb,c1_answerb,c1_busyb;
+		from CheckB to Available on c1_available;
+
+		from Ac to CheckB on c1_checkb;
+		from Camp to CheckB on c1_checkb;
+
+		from Answera to RingB on c1_ringb;
+		from Hangupa to Idle on c1_stopringb;
+		from RingB to Answerb on c1_answerb;
+
+		from CheckB to Camp on c1_busyb;
+		from RingB to Busyb on c1_busyb;
+
+		//label c2_available,c2_checkb,c2_ringb,c2_stopringb,c2_answerb,c2_busyb;
+		from CheckB to Available on c2_available;
+
+		from Ac to CheckB on c2_checkb;
+		from Camp to CheckB on c2_checkb;
+
+		from Answera to RingB on c2_ringb;
+		from Hangupa to Idle on c2_stopringb;
+		from RingB to Answerb on c2_answerb;
+
+		from CheckB to Camp on c2_busyb;
+		from RingB to Busyb on c2_busyb;
+
+		//label c3_available,c3_checkb,c3_ringb,c3_stopringb,c3_answerb,c3_busyb;
+		from CheckB to Available on c3_available;
+
+		from Ac to CheckB on c3_checkb;
+		from Camp to CheckB on c3_checkb;
+
+		from Answera to RingB on c3_ringb;
+		from Hangupa to Idle on c3_stopringb;
+		from RingB to Answerb on c3_answerb;
+
+		from CheckB to Camp on c3_busyb;
+		from RingB to Busyb on c3_busyb;
+	end
+	INVARSPEC !((Caller1.location == Talking) && (Caller2.location == Talking) && (Caller3.location == Talking) && (Caller3.location == Talking))
+end

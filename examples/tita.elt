@@ -1,0 +1,23 @@
+system
+  module TiTa
+    bool turn = true;
+    label sync;
+    location ti, ta;
+    init ti do {turn = true;};
+    from ti to ta on sync provided turn do {
+      turn = Power.pulse;
+    };
+    from ta to ti on sync provided !turn do {
+      turn = Power.pulse;
+    };
+  end
+  module Power
+    bool pulse = false;
+    label sync;
+    location loop;
+    init loop do {pulse = false;};
+    from loop to loop on sync do {
+      pulse = !pulse;
+    };
+  end
+end

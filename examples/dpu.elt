@@ -1,0 +1,467 @@
+system
+	module Sensor
+		bool x1, x2, x3;
+	
+		// with INT0 syncInt
+		label syncLock;
+		// with INT0 syncInt and Master master
+		label syncRead1, syncRead3, syncRead5;
+		// with Master master
+		label missSyncRead1, missSyncRead3, missSyncRead5, missSerialRead2, missSerialRead4, missSerialRead6;
+		label masterLock;
+		// with INTCOM serialInt and Master master
+		label serialRead2, serialRead4, serialRead6;
+		// with INTCOM serialInt
+		label serialLock;
+	
+		location IDLE, LOCK;
+		init IDLE;
+	
+		from IDLE to IDLE on syncRead1, syncRead3, syncRead5, missSyncRead1, missSyncRead3, missSyncRead5, missSerialRead2, missSerialRead4, missSerialRead6, serialRead2, serialRead4, serialRead6; //read;
+		from LOCK to LOCK on syncLock, masterLock, serialLock; // lock;
+		from IDLE to LOCK on syncLock, masterLock, serialLock; // lock;
+		from LOCK to IDLE on syncRead1, syncRead3, syncRead5, missSyncRead1, missSyncRead3, missSyncRead5, missSerialRead2, missSerialRead4, missSerialRead6, serialRead2, serialRead4, serialRead6 /*read*/ do {
+			// if (x == 6) x = 1; else x = x + 1; 
+			x1 = (!(x1 && x2 && !x3) || false) && ((x1 && x2 && !x3) || (!x1 && x2 && x3) || (x1 && (!x2 || !x3)));
+			x2 = (!(x1 && x2 && !x3) || false) && ((x1 && x2 && !x3) || !(x2 == x3));
+			x3 = (!(x1 && x2 && !x3) || true)  && ((x1 && x2 && !x3) || !x3);
+		};
+	end
+	
+	module INT0
+		// syncInt
+	
+		bool s141, s142, s143;
+	
+		// with Sensor sensor
+		label syncLock;
+		// with Sensor sensor and Master master
+		label syncRead1, syncRead3, syncRead5;
+		// with Master master
+		label invokeINT0, syncRet;
+		// with INTCOM serialInt
+		label syncData;
+	
+		location IDLEC, INVOKED, LOCKED, READC, SET;
+		init IDLEC;
+	
+		from IDLEC to INVOKED on invokeINT0; // invoke;
+		from INVOKED to LOCKED on syncLock; // lock;
+		from LOCKED to READC on syncRead1, syncRead3, syncRead5 do {
+			// s14 = Sensor.x;
+			s141 = Sensor.x1;
+			s142 = Sensor.x2;
+			s143 = Sensor.x3;
+		}; // read;
+		from READC to SET on syncData; // set;
+		from SET to IDLEC on syncRet; // ret;
+	end
+	
+	module INTCOM
+		// serialInt
+	
+		bool s111, s112, s113;
+		bool s121, s122, s123;
+		bool s131, s132, s133;
+		bool s141, s142, s143;
+		bool a1, a2, a3;
+		bool b1, b2, b3;
+		bool TSYNOK;
+	
+		// with itself
+		label calc, backup;
+		// with Sensor sensor
+		label serialLock;
+		// with Sensor sensor and Master master
+		label serialRead2, serialRead4, serialRead6;
+		// with Master master
+		label invokeINTCOM, serialRet, masterRecv;
+		// with INT0 syncInt
+		label syncData;
+	
+		location IDLEC, HAS_INT, HAS_LOCK, RECV_MASTER, HAS_GET, HAS_READ_1, HAS_CALC, HAS_SEND, HAS_READ_2, HAS_BACKUP, HAS_UPDATE;
+	
+	
+		init IDLEC;
+	
+		from IDLEC to IDLEC on syncData do {
+			// TSYNOK = true;
+			// s11 = s13;
+			// s13 = INT0.s14;
+			
+			// Connector SyncSensor1Data
+			TSYNOK = true;
+			s111 = s131;
+			s112 = s132;
+			s113 = s133;
+			s131 = INT0.s141;
+			s132 = INT0.s142;
+			s133 = INT0.s143;
+		};  // sync;
+	
+		from IDLEC to HAS_INT on invokeINTCOM; // invoke;
+	
+		from HAS_INT to HAS_LOCK on serialLock; // lock;
+	
+		from HAS_LOCK to HAS_CALC on calc provided TSYNOK == true do {
+			// a = s13;
+			// b = s11;
+			a1 = s131;
+			a2 = s132;
+			a3 = s133;
+			b1 = s111;
+			b2 = s112;
+			b3 = s113;
+		};
+	
+		from HAS_LOCK to HAS_READ_1 on serialRead2, serialRead4, serialRead6 /*read*/ provided TSYNOK == false do {
+			// Connector ReadSensorDataWithMaster
+			// s14 = Sensor.x;
+			s141 = Sensor.x1;
+			s142 = Sensor.x2;
+			s143 = Sensor.x3;
+		};
+	
+		from HAS_READ_1 to HAS_CALC on calc do {
+			// a = s14;
+			// b = s12;
+			a1 = s141;
+			a2 = s142;
+			a3 = s143;
+			b1 = s121;
+			b2 = s122;
+			b3 = s123;
+		};
+	
+		from HAS_CALC to HAS_SEND on masterRecv; // send;
+	
+		from HAS_SEND to HAS_BACKUP on backup provided TSYNOK == false do {
+			// s11 = s14;
+			// s12 = s14;
+			// s13 = s14;
+			s111 = s141;
+			s112 = s142;
+			s113 = s143;
+			s121 = s141;
+			s122 = s142;
+			s123 = s143;
+			s131 = s141;
+			s132 = s142;
+			s133 = s143;
+		};
+	
+		// serialRead2, serialRead4, serialRead6
+		from HAS_SEND to HAS_READ_2 on serialRead2, serialRead4, serialRead6 /*read*/ provided TSYNOK == true do {
+			// Connector ReadSensorDataWithMaster
+			// s14 = Sensor.x;
+			s141 = Sensor.x1;
+			s142 = Sensor.x2;
+			s143 = Sensor.x3;
+
+		};
+	
+		from HAS_READ_2 to HAS_BACKUP on backup do {
+			// s12 = s14;
+			s121 = s141;
+			s122 = s142;
+			s123 = s143;
+		};
+	
+		from HAS_BACKUP to IDLEC on serialRet /*ret*/ do {
+			TSYNOK = false;
+		};
+	end
+	
+	module Master
+		// master
+	
+		// int a, b, ra, rb, s11, s12, s13, s14, s15, s16;
+		bool ra1, ra2, ra3, rb1, rb2, rb3;
+		bool s111, s112, s113;
+		bool s121, s122, s123;
+		bool s131, s132, s133;
+		bool s141, s142, s143;
+		bool s151, s152, s153;
+		bool s161, s162, s163;
+
+		bool v11, v12, v13, v14, v15, v16;
+	
+		// with INT0 syncInt
+		label syncRet, invokeINT0;
+		// with INT0 syncInt and Sensor sensor
+		label syncRead1, syncRead3, syncRead5;
+		// with Sensor sensor
+		label missSyncRead1, missSyncRead3, missSyncRead5, missSerialRead2, missSerialRead4, missSerialRead6;
+		label masterLock;
+		// with INTCOM serialInt and Sensor sensor
+		label serialRead2, serialRead4, serialRead6;
+		// with INTCOM serialInt
+		label invokeINTCOM, serialRet, masterRecv;
+		// with itself
+		label missINT0, missINTCOM, idle;
+	
+		location IDLEC, INT01, INT0_RET1, MISS_INT01, INTCOM1, HAS_RECV1, INTCOM_RET1, MISS_INT0_LOCK1, MISS_INT0_READ1, MISS_INTCOM_LOCK1, MISS_INTCOM_READ1, MISS_INTCOM1;
+		location INT02, INT0_RET2, MISS_INT02, INTCOM2, HAS_RECV2, INTCOM_RET2, MISS_INT0_LOCK2, MISS_INT0_READ2, MISS_INTCOM_LOCK2, MISS_INTCOM_READ2, MISS_INTCOM2;
+		location INT03, INT0_RET3, MISS_INT03, INTCOM3, HAS_RECV3, INTCOM_RET3, MISS_INT0_LOCK3, MISS_INT0_READ3, MISS_INTCOM_LOCK3, MISS_INTCOM_READ3, MISS_INTCOM3;
+	
+		init IDLEC;
+	
+		from IDLEC to INT01 on invokeINT0 /*it is a port and also a label*/ do {
+			v11 = true;
+		};
+	
+		from INT01 to INT01 on syncRead1 do {
+			// Connector ReadSensorDataWithMaster
+			// s11 = Sensor.x;
+			s111 = Sensor.x1;
+			s112 = Sensor.x2;
+			s113 = Sensor.x3;
+		}; // syncReadS11;
+	
+		from INT01 to INT0_RET1 on syncRet, serialRet; // ret;
+	
+		from IDLEC to MISS_INT01 on missINT0 /*it is a port and also a label*/ do {
+			v11 = false;
+		}; // missINT0;
+	
+		from MISS_INT01 to MISS_INT0_LOCK1 on masterLock; // lock;
+	
+		from MISS_INT0_LOCK1 to MISS_INT0_READ1 on missSyncRead1 do {
+			// Connector ReadSensorData
+			// s11 = Sensor.x;
+			s111 = Sensor.x1;
+			s112 = Sensor.x2;
+			s113 = Sensor.x3;
+		}; // readS11;
+	
+		from MISS_INT0_READ1 to INTCOM1 on invokeINTCOM /*it is a port and also a label*/ do {
+			v11 = true;
+		}; // invokeINTCOM;
+	
+		from INT0_RET1 to INTCOM1 on invokeINTCOM /*it is a port and also a label*/ do {
+			v12 = true;
+		}; // invokeINTCOM;
+	
+		from INTCOM1 to INTCOM1 on serialRead2 do {
+			// Connector ReadSensorDataWithMaster
+			// s12 = Sensor.x;
+			s121 = Sensor.x1;
+			s122 = Sensor.x2;
+			s123 = Sensor.x3;
+		}; // syncReadS12;
+	
+		from INT0_RET1 to MISS_INTCOM1 on missINTCOM do {
+			v12 = false;
+		}; // missINTCOM;
+	
+		from MISS_INTCOM1 to MISS_INTCOM_LOCK1 on masterLock; // lock;
+	
+		from MISS_INTCOM_LOCK1 to INTCOM_RET1 on missSerialRead2 do {
+			// Connector ReadSensorData
+			// s12 = Sensor.x;
+			s121 = Sensor.x1;
+			s122 = Sensor.x2;
+			s123 = Sensor.x3;
+
+		}; // readS12;
+	
+		from INTCOM1 to HAS_RECV1 on masterRecv do {
+			// Connector Transfer2
+			// ra = INTCOM.a;
+			// rb = INTCOM.b;
+			ra1 = INTCOM.a1;
+			ra2 = INTCOM.a2;
+			ra3 = INTCOM.a3;
+		}; // recv;
+	
+		from HAS_RECV1 to HAS_RECV1 on serialRead2; // syncReadS12;
+	
+		from HAS_RECV1 to INTCOM_RET1 on syncRet, serialRet; // ret;
+	
+		///////////////////////////////////////////////////////////////
+	
+		from INTCOM_RET1 to INT02 on invokeINT0 /*it is a port and also a label*/ do {
+			v13 = true;
+		};
+	
+		from INT02 to INT02 on syncRead3 do {
+			// Connector ReadSensorDataWithMaster
+			// s13 = Sensor.x;
+			s131 = Sensor.x1;
+			s132 = Sensor.x2;
+			s133 = Sensor.x3;
+		}; // syncReadS13;
+	
+		from INT02 to INT0_RET2 on syncRet, serialRet; // ret;
+	
+		from INTCOM_RET1 to MISS_INT02 on missINT0 do {
+			v13 = false;
+		}; // missINT0;
+	
+		from MISS_INT02 to MISS_INT0_LOCK2 on masterLock; // lock;
+	
+		from MISS_INT0_LOCK2 to MISS_INT0_READ2 on missSyncRead3 do {
+			// Connector ReadSensorData
+			// s13 = Sensor.x;
+			s131 = Sensor.x1;
+			s132 = Sensor.x2;
+			s133 = Sensor.x3;
+		}; // readS13;
+	
+		from MISS_INT0_READ2 to INTCOM2 on invokeINTCOM /*it is a port and also a label*/ do {
+			v14 = true;
+		}; // invokeINTCOM;
+	
+		from INT0_RET2 to INTCOM2 on invokeINTCOM /*it is a port and also a label*/ do {
+			v14 = true;
+		}; // invokeINTCOM;
+	
+		from INTCOM2 to INTCOM2 on serialRead4 do {
+			// Connector ReadSensorDataWithMaster
+			// s14 = Sensor.x;
+			s141 = Sensor.x1;
+			s142 = Sensor.x2;
+			s143 = Sensor.x3;
+		}; // syncReadS14;
+	
+		from INT0_RET2 to MISS_INTCOM2 on missINTCOM do {
+			v14 = false;
+		}; // missINTCOM;
+	
+		from MISS_INTCOM2 to MISS_INTCOM_LOCK2 on masterLock; // lock;
+	
+		from MISS_INTCOM_LOCK2 to INTCOM_RET2 on missSerialRead4 do {
+			// Connector ReadSensorData
+			// s14 = Sensor.x;
+			s141 = Sensor.x1;
+			s142 = Sensor.x2;
+			s143 = Sensor.x3;
+		}; // readS14;
+	
+		from INTCOM2 to HAS_RECV2 on masterRecv do {
+			// Connector Transfer2
+			// ra = INTCOM.a;
+			// rb = INTCOM.b;
+			ra1 = INTCOM.a1;
+			ra2 = INTCOM.a2;
+			ra3 = INTCOM.a3;
+			rb1 = INTCOM.b1;
+			rb2 = INTCOM.b2;
+			rb3 = INTCOM.b3;
+		}; // recv;
+	
+		from HAS_RECV2 to HAS_RECV2 on serialRead4 do {
+			// Connector ReadSensorDataWithMaster
+			// s14 = Sensor.x;
+			s141 = Sensor.x1;
+			s142 = Sensor.x2;
+			s143 = Sensor.x3;
+		}; // syncReadS14;
+	
+		from HAS_RECV2 to INTCOM_RET2 on syncRet, serialRet; // ret;
+	
+		from INTCOM_RET2 to INT03 on invokeINT0 /*it is a port and also a label*/ do {
+			v15 = true;
+		};
+	
+		from INT03 to INT03 on syncRead5 do {
+			// Connector ReadSensorDataWithMaster
+			// s15 = Sensor.x;
+			s151 = Sensor.x1;
+			s152 = Sensor.x2;
+			s153 = Sensor.x3;
+		}; // syncReadS15;
+	
+		from INT03 to INT0_RET3 on syncRet, serialRet; // ret;
+	
+		from INTCOM_RET2 to MISS_INT03 on missINT0 do {
+			v15 = false;
+		}; // missINT0;
+	
+		from MISS_INT03 to MISS_INT0_LOCK3 on masterLock; // lock;
+	
+		from MISS_INT0_LOCK3 to MISS_INT0_READ3 on missSyncRead5 do {
+			// Connector ReadSensorData
+			// s15 = Sensor.x;
+			s151 = Sensor.x1;
+			s152 = Sensor.x2;
+			s153 = Sensor.x3;
+		}; // readS15;
+	
+		from MISS_INT0_READ3 to INTCOM3 on invokeINTCOM /*it is a port and also a label*/ do {
+			v16 = true;
+		}; // invokeINTCOM;
+	
+		from INT0_RET3 to INTCOM3 on invokeINTCOM /*it is a port and also a label*/ do {
+			v16 = true;
+		}; // invokeINTCOM;
+	
+		from INTCOM3 to INTCOM3 on serialRead6 do {
+			// Connector ReadSensorDataWithMaster
+			// s16 = Sensor.x;
+			s161 = Sensor.x1;
+			s162 = Sensor.x2;
+			s163 = Sensor.x3;
+		}; // syncReadS16;
+	
+		from INT0_RET3 to MISS_INTCOM3 on missINTCOM do {
+			v16 = false;
+		}; // missINTCOM;
+	
+		from MISS_INTCOM3 to MISS_INTCOM_LOCK3 on masterLock; // lock;
+	
+		from MISS_INTCOM_LOCK3 to INTCOM_RET3 on missSerialRead6 do {
+			// Connector ReadSensorData
+			// s16 = Sensor.x;
+			s161 = Sensor.x1;
+			s162 = Sensor.x2;
+			s163 = Sensor.x3;
+		}; // readS16;
+	
+		from INTCOM3 to HAS_RECV3 on masterRecv do {
+			// Connector Transfer2
+			// ra = INTCOM.a;
+			// rb = INTCOM.b;
+			ra1 = INTCOM.a1;
+			ra2 = INTCOM.a2;
+			ra3 = INTCOM.a3;
+			rb1 = INTCOM.b1;
+			rb2 = INTCOM.b2;
+			rb3 = INTCOM.b3;
+		}; // recv;
+	
+		from HAS_RECV3 to HAS_RECV3 on serialRead6 do {
+			// Connector ReadSensorDataWithMaster
+			// s16 = Sensor.x;
+			s161 = Sensor.x1;
+			s162 = Sensor.x2;
+			s163 = Sensor.x3;
+		}; // syncReadS16;
+	
+		from HAS_RECV3 to INTCOM_RET3 on syncRet, serialRet; // ret;
+	
+		from INTCOM_RET3 to IDLEC on idle; // idle;
+	
+	end
+
+	//==========================================================================
+	// define INVARSPEC property
+	//==========================================================================
+	// if (v15 &&&& v13)
+	//	  ra == s15 && rb == s13;
+	// else if (v16 &&&& v14)
+	//	  ra == s16 && rb == s14;
+	// else if (v16 &&&& v13)
+	//	  ra == s16 && rb == s13;
+	// else if (v15 &&&& v14)
+	//	  ra == s15 && rb == s14;
+	
+	// 原模型
+	INVARSPEC !(Master.location == INTCOM_RET3) || ((((Master.v15 && Master.v13) && (((Master.ra1 == Master.s151) && (Master.ra2 == Master.s152) && (Master.ra3 == Master.s153)) && ((Master.rb1 == Master.s131) && (Master.rb2 == Master.s132) && (Master.rb3 == Master.s133)))) || (!(Master.v15 && Master.v13) && (((Master.v16 && Master.v14) && (((Master.ra1 == Master.s161) && (Master.ra2 == Master.s162) && (Master.ra3 == Master.s163)) && ((Master.rb1 == Master.s141) && (Master.rb2 == Master.s142) && (Master.rb3 == Master.s143)))) || (!(Master.v16 && Master.v14) && (((Master.v16 && Master.v13) && (((Master.ra1 == Master.s161) && (Master.ra2 == Master.s162) && (Master.ra3 == Master.s163)) && ((Master.rb1 == Master.s131) && (Master.rb2 == Master.s132) && (Master.rb3 == Master.s133)))) || (!(Master.v16 && Master.v13) && (((Master.v15 && Master.v14) && (((Master.ra1 == Master.s151) && (Master.ra2 == Master.s152) && (Master.ra3 == Master.s153)) && ((Master.rb1 == Master.s141) && (Master.rb2 == Master.s142) && (Master.rb3 == Master.s143)))) || (!(Master.v15 && Master.v14) && false)))))))))
+	
+	// 在原模型的基础上添加“v16必须为true“的限制
+	INVARSPEC !((Master.location == INTCOM_RET3) && (Master.v16 == true)) || ((((Master.v15 && Master.v13) && (((Master.ra1 == Master.s151) && (Master.ra2 == Master.s152) && (Master.ra3 == Master.s153)) && ((Master.rb1 == Master.s131) && (Master.rb2 == Master.s132) && (Master.rb3 == Master.s133)))) || (!(Master.v15 && Master.v13) && (((Master.v16 && Master.v14) && (((Master.ra1 == Master.s161) && (Master.ra2 == Master.s162) && (Master.ra3 == Master.s163)) && ((Master.rb1 == Master.s141) && (Master.rb2 == Master.s142) && (Master.rb3 == Master.s143)))) || (!(Master.v16 && Master.v14) && (((Master.v16 && Master.v13) && (((Master.ra1 == Master.s161) && (Master.ra2 == Master.s162) && (Master.ra3 == Master.s163)) && ((Master.rb1 == Master.s131) && (Master.rb2 == Master.s132) && (Master.rb3 == Master.s133)))) || (!(Master.v16 && Master.v13) && (((Master.v15 && Master.v14) && (((Master.ra1 == Master.s151) && (Master.ra2 == Master.s152) && (Master.ra3 == Master.s153)) && ((Master.rb1 == Master.s141) && (Master.rb2 == Master.s142) && (Master.rb3 == Master.s143)))) || (!(Master.v15 && Master.v14) && false)))))))))
+
+	// 在第二个属性的基础上添加“中断不能连续丢失“的限制
+	INVARSPEC !((Master.location == INTCOM_RET3) && (Master.v16 == true) && !(Master.v11 == false && Master.v12 == false) && !(Master.v12 == false && Master.v13 == false) && !(Master.v13 == false && Master.v14 == false) && !(Master.v14 == false && Master.v15 == false) && !(Master.v15 == false && Master.v16 == false)) || ((((Master.v15 && Master.v13) && (((Master.ra1 == Master.s151) && (Master.ra2 == Master.s152) && (Master.ra3 == Master.s153)) && ((Master.rb1 == Master.s131) && (Master.rb2 == Master.s132) && (Master.rb3 == Master.s133)))) || (!(Master.v15 && Master.v13) && (((Master.v16 && Master.v14) && (((Master.ra1 == Master.s161) && (Master.ra2 == Master.s162) && (Master.ra3 == Master.s163)) && ((Master.rb1 == Master.s141) && (Master.rb2 == Master.s142) && (Master.rb3 == Master.s143)))) || (!(Master.v16 && Master.v14) && (((Master.v16 && Master.v13) && (((Master.ra1 == Master.s161) && (Master.ra2 == Master.s162) && (Master.ra3 == Master.s163)) && ((Master.rb1 == Master.s131) && (Master.rb2 == Master.s132) && (Master.rb3 == Master.s133)))) || (!(Master.v16 && Master.v13) && (((Master.v15 && Master.v14) && (((Master.ra1 == Master.s151) && (Master.ra2 == Master.s152) && (Master.ra3 == Master.s153)) && ((Master.rb1 == Master.s141) && (Master.rb2 == Master.s142) && (Master.rb3 == Master.s143)))) || (!(Master.v15 && Master.v14) && false)))))))))
+end

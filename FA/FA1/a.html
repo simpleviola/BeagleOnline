@@ -1,0 +1,222 @@
+<!doctype HTML5>
+<html>
+<head>
+	<meta charset = "utf-8">
+	<title>FAonlineVerifier</title>
+	<style type="text/css">
+
+		#wrapper{
+			width: 1200px;
+			height: 770px;
+			margin-left: auto;
+			margin-right: auto;
+			background-color: #eeeeee;
+			margin-top: -10px;
+			padding-left: 30px;
+			padding-right: 30px;
+			padding-top: -5px;
+			padding-bottom: 30px;
+		}
+
+		#menu{
+			width: 1000px;
+			height: 60px;
+			padding-top: 30px;
+			padding-bottom: 20px;
+		}
+
+		.mode{
+			float: left;
+			width: 60px;
+			height: 60px;
+			margin-right: 5px;
+			background-color: #dddddd;
+			border-radius: 5px;
+			border-style: solid;
+			border-color: #808080;
+		}
+
+		.item{
+			margin: 10px;
+		}
+
+		.active{
+			float: left;
+			width: 60px;
+			height: 60px;
+			margin-right: 5px;
+			background-color: #bbbbbb;
+			border-radius: 5px;
+			border-style: solid;
+			border-color: #808080;
+		}
+
+		.mode:hover{
+			background-color: #bbbbbb;
+		}
+
+		#mycanvas{
+			background-color: #fff;
+			border-color: #808080;
+			border-radius: 10px;
+			margin-bottom: 30px;
+		}
+
+		.board{
+			float: left;
+			margin-right: 10px;
+			width: 1200px;
+			height: 160px;
+			background-color: rgba(255,255,255,0.7);
+			border-radius: 10px;
+			margin-top: 15px;
+		}
+
+		#addVariable{
+			width: 270px;
+			height: 285px;
+			margin-top: 20px;
+			margin-left: 10px;
+			margin-bottom: 10px;
+			padding-left: 40px;
+			float: left;
+		}
+
+		#confirm{
+			width: 270px;
+			height: 285px;
+			margin-top: 20px;
+			margin-left: 10px;
+			margin-bottom: 10px;
+			float: left;
+		}
+
+		#editLocation{
+			width: 270px;
+			height: 80px;
+			margin-top: 6px;
+			margin-left: 10px;
+			margin-bottom: 10px;
+			float: left;
+		}
+
+		#editTransition{
+			width: 270px;
+			height: 120px;
+			margin-top: 6px;
+			margin-left: 10px;
+			margin-bottom: 10px;
+			float: left;
+		}
+
+		.box{
+			width: 80px;
+		}
+
+		.box1{
+			width: 72px;
+		}
+
+		.box2{
+			width: 86px;
+		}
+
+		.box3{
+			width: 126px;
+		}
+
+		.bButton{
+			width: 40px;
+		}
+
+		.cButton{
+			width: 70px;
+			float: right;
+			margin-right: 10px;
+			margin-top: 5px;
+		}
+
+		.addItem{
+			padding-bottom: 5px;
+		}
+
+		.showVariable{
+			width: 260px;
+			height: 120px;
+		}
+	</style>
+</head>
+
+<body>
+	<div id = "wrapper">
+		<div id = "menu">
+			<div class = "mode a" id = "selectMode" onclick = "selectmode()"><div class = "item" ><img src="img/select.png" height = "40px" width = "40px"></div></div>
+			<div class = "mode a" id = "newModule" onclick = "modulemode()"><div class = "item" ><img src="img/new.png" height = "40px" width = "40px"></div></div>
+			<div class = "mode a" id = "newTransition" onclick = "transitionmode()"><div class = "item" ><img src="img/trans.png" height = "40px" width = "40px"></div></div>
+			<div class = "mode a" id = "verify" onclick = "verify()"><div class = "item" ><img src="img/step.png" height = "40px" width = "40px"></div></div>
+		</div>
+			<canvas id = "mycanvas" width = 1200 height = 500 background-color = #fff >Fallback content, in case the browser does not support Canvas. </canvas>
+		<div class = "board">
+			<div id = "addVariable">
+				<div class = "addItem">
+					<label>&nbsp;module name&nbsp;</label>
+					<input type = "text" id = "inputModuleName" class = "box2">
+					<input type = "submit" class = "bButton" value = "OK" onclick = "submitModuleName()"> 
+				</div>
+				<p>Add Variables</p>
+				<div class = "addItem">
+					<label>&nbsp;int&nbsp;</label>
+				<input type = "text" id = "inputInt" class = "box">
+				<label>=</label>
+				<input type = "text" id = "inputIntValue" class = "box">
+				<input type = "submit" class = "bButton" value = "+" onclick = "submitAddInt()"> 
+				</div>
+
+				<div class = "addItem">
+					<label>&nbsp;bool&nbsp;</label>
+					<input type = "text" id = "inputBool" class = "box1">
+					<label>=</label>
+					<input type = "text" id = "inputBoolValue" class = "box1">
+					<input type = "submit" class = "bButton" value = "+" onclick = "submitAddBool()"> 
+				</div>
+			</div>
+			<div id = "confirm">
+				<textarea class = "showVariable"></textarea> 
+			</div>
+			<div id = "editLocation">
+				<p>Locations</p>
+				<div class = "addItem">
+					<input type = "checkbox" id = "isInit">
+					<label>&nbsp;is init</label>
+					<input type = "submit" class = "bButton" value = "OK" style = "margin-left: 83px;" onclick = "submitInit()"> 
+				</div>
+
+				<div class = "addItem">
+					<label>&nbsp;name&nbsp;</label>
+					<input type = "text" id = "addEnum" class = "box2">
+					<input type = "submit" class = "bButton" value = "OK" onclick = "submitLocName()"> 
+				</div>
+			</div>
+			<div id = "editTransition">
+				<p>Transitions</p>
+				<div class = "addItem">
+					<label>&nbsp;provided&nbsp;</label>
+				<input type = "text" id = "addInt" class = "box3">
+				<input type = "submit" class = "bButton" value = "OK" onclick = "submitPro()"> 
+				</div>
+
+				<div class = "addItem">
+					<label>&nbsp;action&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+					<input type = "text" id = "addEnum" class = "box3">
+					<input type = "submit" class = "bButton" value = "OK" onclick = "submitAct()"> 
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src = "fabric.min.js"></script>
+<script type="text/javascript">
+</script>
+<script type="text/javascript" src = "jquery.js"></script>
+<script type="text/javascript" src = "a.js"></script>
+</html>
